@@ -1,0 +1,10 @@
+{
+  "name": "OneDrive-proef",
+  "short_name": "Proef",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0C0C0A",
+  "theme_color": "#0C0C0A",
+  "icons": [{ "src": "icoon.png", "sizes": "256x256", "type": "image/png" }]
+}
