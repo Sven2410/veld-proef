@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veld-proef: pc</title>
+<link rel="icon" href="icoon.png">
+<link rel="stylesheet" href="stijl.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"
+        integrity="sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js"
+        integrity="sha384-e9EFD6BGC90bkW9aDV5xbbBfzwN7G8YImHao2lfLVKV/hPB0E0go+H3I64h7oHtA"
+        crossorigin="anonymous"></script>
+<script src="gedeeld.js"></script>
+<style>
+  #qr svg { width: 100%; max-width: 260px; height: auto; display: block; margin: 0 auto; background: #fff;
+            border-radius: 10px; }
+  .rapport { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: start; }
+  .rapport img, .rapport .leeg { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--rand); }
+  .rapport b { display: block; }
+  .rapport a { color: var(--groen); margin-right: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+<main class="breed">
+  <header>
+    <h1>Veld-proef: de pc</h1>
+    <span id="stand" class="pil">opstarten…</span>
+  </header>
+  <p class="zacht heel" style="margin:0">Deze pagina speelt het programma op de pc na. Zolang hij openstaat kan de
+    telefoon versturen. Rapporten blijven in deze browser bewaard.</p>
+
+  <section>
+    <h2>Telefoon koppelen</h2>
+    <div id="qr"></div>
+    <p class="zacht">Scan met de veld-app (QR-code scannen) of met de camera van de telefoon.</p>
+    <details>
+      <summary class="zacht">Koppelcode</summary>
+      <p class="code" id="code"></p>
+    </details>
+    <button id="nieuw" class="gevaar">Nieuwe koppeling</button>
+    <p class="zacht">Een nieuwe koppeling sluit telefoons die met de oude gekoppeld waren buiten.</p>
+  </section>
+
+  <section>
+    <h2>Ontvangen</h2>
+    <ul id="ontvangen"></ul>
+  </section>
+
+  <section>
+    <h2>Klanten voor de telefoon</h2>
+    <label for="klanten">Eén per regel. Gaat mee bij elke verbinding.</label>
+    <textarea id="klanten" rows="6"></textarea>
+  </section>
+
+  <section>
+    <h2>Logboek</h2>
+    <ul id="log"></ul>
+  </section>
+</main>
+
+<script>
+const log = maakLogboek("pc.log", $("#log"));
+
+let code = localStorage.getItem("pc.koppeling");
+if (!leesKoppelcode(code)) {
+  code = nieuweKoppelcode();
+  localStorage.setItem("pc.koppeling", code);
+}
+const koppel = leesKoppelcode(code);
+const link = `${new URL("./", location.href).href}#koppel=${koppel.code}`;
+
+const qr = qrcode(0, "M");
+qr.addData(link);
+qr.make();
+$("#qr").innerHTML = qr.createSvgTag({ cellSize: 6, margin: 3, scalable: true });
+$("#code").textContent = koppel.code;
+$("#nieuw").onclick = () => {
+  localStorage.removeItem("pc.koppeling");
+  log("Nieuwe koppeling gemaakt");
+  location.reload();
+};
+
+const klantenVeld = $("#klanten");
+klantenVeld.value = localStorage.getItem("pc.klanten") ?? "Proefklant Jansen\nProefklant De Vries\nProefklant Bakker";
+klantenVeld.oninput = () => localStorage.setItem("pc.klanten", klantenVeld.value);
+const klanten = () => klantenVeld.value.split("\n").map((s) => s.trim()).filter(Boolean);
+
+// --- wat er binnenkwam, in IndexedDB --------------------------------------------
+
+function db() {
+  return new Promise((ok, nee) => {
+    const r = indexedDB.open("pc", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("ontvangen", { keyPath: "id" });
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => nee(r.error);
+  });
+}
+
+async function opslag(modus, doe) {
+  const d = await db();
+  return new Promise((ok, nee) => {
+    const tx = d.transaction("ontvangen", modus);
+    const vraag = doe(tx.objectStore("ontvangen"));
+    tx.oncomplete = () => ok(vraag.result);
+    tx.onerror = () => nee(tx.error);
+  });
+}
+
+function duur(ms) {
+  const m = Math.round(ms / 60000);
+  return m < 1 ? "binnen een minuut" : m < 120 ? `${m} minuten` : `${(m / 60).toFixed(1)} uur`;
+}
+
+async function toonOntvangen() {
+  const lijst = (await opslag("readonly", (s) => s.getAll())).sort((a, b) => b.ontvangen - a.ontvangen);
+  $("#ontvangen").replaceChildren(...(lijst.length ? lijst.map((r) => {
+    const li = document.createElement("li");
+    li.className = "rapport";
+    const beeld = r.foto ? Object.assign(document.createElement("img"), { src: URL.createObjectURL(r.foto), alt: "" })
+      : Object.assign(document.createElement("div"), { className: "leeg" });
+    const tekstDeel = document.createElement("div");
+    const naam = document.createElement("b");
+    naam.textContent = r.klant;
+    const opm = document.createElement("div");
+    opm.textContent = r.opmerking || "(geen opmerking)";
+    const wanneer = document.createElement("div");
+    wanneer.className = "zacht";
+    wanneer.textContent = `Afgerond ${tijd(r.gemaakt)}, binnen ${tijd(r.ontvangen)} (${duur(r.ontvangen - r.gemaakt)} later)`;
+    const json = Object.assign(document.createElement("a"), { textContent: "rapport.json", download: `${r.id}.json`,
+      href: URL.createObjectURL(new Blob([JSON.stringify({ ...r, foto: !!r.foto }, null, 1)], { type: "application/json" })) });
+    tekstDeel.append(naam, opm, wanneer, json);
+    if (r.foto) tekstDeel.append(Object.assign(document.createElement("a"),
+      { textContent: "foto.jpg", download: `${r.id}.jpg`, href: beeld.src }));
+    li.append(beeld, tekstDeel);
+    return li;
+  }) : [Object.assign(document.createElement("li"), { className: "zacht", textContent: "Nog niets." })]));
+}
+
+// --- de verbinding -----------------------------------------------------------------
+
+let sleutel = null;
+
+function stand(tekst_, soort = "") {
+  $("#stand").textContent = tekst_;
+  $("#stand").className = `pil ${soort}`;
+}
+
+function start() {
+  const peer = new Peer(koppel.pc, { debug: 0 });
+  peer.on("open", () => stand("klaar voor de telefoon", "goed"));
+  peer.on("disconnected", () => {
+    stand("verbinding met het makelaartje weg, opnieuw…", "let-op");
+    setTimeout(() => !peer.destroyed && peer.reconnect(), 3000);
+  });
+  peer.on("error", (e) => {
+    if (e.type === "unavailable-id") {
+      stand("deze pagina is al ergens anders open", "let-op");
+      log("Deze pc-pagina is al open in een ander venster of tabblad. Sluit dit tabblad.", true);
+    } else if (e.type !== "peer-unavailable") {
+      log(`Verbinding: ${e.type || e.message}`, true);
+    }
+  });
+  peer.on("connection", (conn) => {
+    let vertrouwd = false;
+    conn.on("data", async (m) => {
+      try {
+        if (m.soort === "hallo") {
+          // Kan de pc dit lezen, dan heeft de telefoon de sleutel uit de QR-code.
+          const info = tekst.van(await ontsleutel(sleutel, m));
+          vertrouwd = true;
+          conn.send({ soort: "klanten", ...(await versleutel(sleutel, tekst.naar(klanten()))) });
+          conn.send({ soort: "welkom" });
+          log(`Telefoon verbonden (${/iPhone|Android|Macintosh|Windows/.exec(info.toestel)?.[0] || "onbekend toestel"})`);
+        } else if (!vertrouwd) {
+          conn.close();
+        } else if (m.soort === "rapport") {
+          const r = tekst.van(await ontsleutel(sleutel, m));
+          const foto = r.foto ? new Blob([await ontsleutel(sleutel, { iv: m.fotoIv, data: m.foto })], { type: "image/jpeg" }) : null;
+          // Bewaren op id: komt hetzelfde rapport twee keer (verbinding viel
+          // weg voor de bevestiging), dan blijft het er één.
+          await opslag("readwrite", (s) => s.put({ ...r, foto, ontvangen: Date.now() }));
+          conn.send({ soort: "ontvangen", id: r.id });
+          log(`Ontvangen: ${r.klant}${foto ? ` met foto (${Math.round(foto.size / 1024)} kB)` : ""}`);
+          toonOntvangen();
+        }
+      } catch (e) {
+        log("Een bericht van een telefoon kon niet gelezen worden. Andere koppeling? Koppel de telefoon opnieuw.", true);
+        conn.close();
+      }
+    });
+  });
+}
+
+maakSleutel(koppel.sleutel).then((s) => {
+  sleutel = s;
+  toonOntvangen();
+  start();
+});
+</script>
+</body>
+</html>

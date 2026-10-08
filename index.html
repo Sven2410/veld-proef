@@ -3,68 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OneDrive-proef</title>
+<title>Veld-proef</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icoon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Proef">
+<meta name="apple-mobile-web-app-title" content="Veld-proef">
 <meta name="theme-color" content="#0C0C0A">
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.30.0/lib/msal-browser.min.js"
-        integrity="sha384-RGxxfG5yRS8DLU7ZJ8OoLhbV/BsJFHyPuMVHrTLbpj3t5Z15LnviJmaznKY/a7LZ"
+<link rel="stylesheet" href="stijl.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"
+        integrity="sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu"
         crossorigin="anonymous"></script>
+<script src="gedeeld.js"></script>
 <style>
-  :root {
-    --achter: #0c0c0a; --vlak: #1a1a17; --rand: #2c2b27; --inkt: #ece8e1; --zacht: #a29d94;
-    --groen: #22a06b; --oranje: #f08c00; --rood: #e5484d;
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--achter); color: var(--inkt);
-    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
-  }
-  main { max-width: 560px; margin: 0 auto; display: grid; gap: 14px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  h1 { font-size: 21px; margin: 0; }
-  h2 { font-size: 15px; margin: 0 0 10px; color: var(--zacht); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-  section { background: var(--vlak); border: 1px solid var(--rand); border-radius: 14px; padding: 14px; }
-  .net { font-size: 13px; padding: 4px 10px; border-radius: 99px; background: var(--rand); }
-  .net.aan { background: color-mix(in srgb, var(--groen) 25%, transparent); }
-  label { display: block; font-size: 14px; color: var(--zacht); margin: 10px 0 4px; }
-  input, textarea, select {
-    width: 100%; font: inherit; color: inherit; background: var(--achter);
-    border: 1px solid var(--rand); border-radius: 10px; padding: 10px;
-  }
-  textarea { min-height: 70px; resize: vertical; }
-  button {
-    font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 11px 16px;
-    background: var(--groen); color: #fff; margin-top: 12px; cursor: pointer;
-  }
-  button.tweede { background: var(--rand); color: var(--inkt); }
-  button.let-op { background: var(--oranje); }
-  button:disabled { opacity: .45; }
-  .rij { display: flex; flex-wrap: wrap; gap: 8px; }
-  .rij button { flex: 1 1 auto; }
-  .zacht { color: var(--zacht); font-size: 14px; }
-  ul { list-style: none; margin: 0; padding: 0; }
-  li { padding: 8px 0; border-top: 1px solid var(--rand); font-size: 14px; }
-  li:first-child { border-top: 0; }
-  .tijd { color: var(--zacht); font-variant-numeric: tabular-nums; margin-right: 6px; }
-  .stand { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--rand); margin-left: 6px; }
-  .stand.klaar { background: color-mix(in srgb, var(--oranje) 30%, transparent); }
-  .stand.verstuurd { background: color-mix(in srgb, var(--groen) 30%, transparent); }
-  .fout { color: var(--rood); }
+  .scan { position: fixed; inset: 0; background: #000; display: grid; place-items: center; z-index: 9; }
+  .scan video { width: 100%; max-height: 80vh; object-fit: cover; }
+  .scan button { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 16px; right: 16px; }
+  .scan p { position: absolute; top: max(24px, env(safe-area-inset-top)); left: 16px; right: 16px; text-align: center; }
 </style>
 </head>
 <body>
 <main>
-  <header><h1>OneDrive-proef</h1><span id="net" class="net"></span></header>
+  <header><h1>Veld-proef</h1><span id="stand" class="pil"></span></header>
 
   <section>
-    <h2>Microsoft</h2>
-    <div id="account" class="zacht"></div>
-    <div class="rij" id="inlogknoppen"></div>
+    <h2>Pc</h2>
+    <div id="koppeling"></div>
   </section>
 
   <section>
@@ -80,7 +43,7 @@
       <button type="submit">Afronden</button>
     </form>
     <p class="zacht">Afronden bewaart het op de telefoon, ook zonder internet. Versturen gaat vanzelf zodra er
-      internet is en je ingelogd bent.</p>
+      internet is en de pc aan staat met het programma open.</p>
   </section>
 
   <section>
@@ -93,56 +56,116 @@
   </section>
 
   <section>
-    <h2>Klanten van de pc</h2>
-    <p class="zacht" id="klanten-stand"></p>
-    <button id="klanten" class="tweede">Klanten ophalen</button>
-  </section>
-
-  <section>
     <h2>Logboek</h2>
-    <p class="zacht">Hieraan zien we na een dag of het inloggen bleef staan.</p>
     <ul id="log"></ul>
   </section>
 </main>
 
 <script>
-// Het Application (client) ID uit het Microsoft-portaal. Geen geheim: elke
-// pagina die met Microsoft inlogt toont het in de adresbalk.
-const CLIENT_ID = "VUL-HIER-IN";
-const SCOPES = ["Files.ReadWrite.AppFolder"];
-// De eigen map van de app in OneDrive (Apps/<naam van de app>). De app kan
-// alleen daar bij, niet in de rest van de OneDrive.
-const MAP = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
+const log = maakLogboek("veld.log", $("#log"));
+const koppeling = () => leesKoppelcode(localStorage.getItem("veld.koppeling"));
 
-const $ = (s) => document.querySelector(s);
-const uur = (t) => new Date(t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+// --- koppelen ------------------------------------------------------------------
 
-// --- logboek -------------------------------------------------------------------
-
-function log(tekst, fout = false) {
-  const l = JSON.parse(localStorage.getItem("proef.log") || "[]");
-  l.unshift({ t: Date.now(), tekst, fout });
-  localStorage.setItem("proef.log", JSON.stringify(l.slice(0, 300)));
-  toonLog();
+// Een QR-code gescand met de camera van de telefoon opent deze pagina met de
+// code achter het hekje: dat deel gaat nooit naar een server.
+function koppel(code, hoe) {
+  const k = leesKoppelcode(code);
+  if (!k) {
+    log("Dat is geen koppelcode van de pc.", true);
+    return false;
+  }
+  localStorage.setItem("veld.koppeling", k.code);
+  localStorage.setItem("veld.gekoppeld", String(Date.now()));
+  log(`Gekoppeld met de pc (${hoe})`);
+  toonKoppeling();
+  verstuur(true);
+  return true;
 }
 
-function toonLog() {
-  const l = JSON.parse(localStorage.getItem("proef.log") || "[]");
-  $("#log").replaceChildren(...l.slice(0, 60).map((r) => {
-    const li = document.createElement("li");
-    if (r.fout) li.className = "fout";
-    li.innerHTML = `<span class="tijd"></span>`;
-    li.firstChild.textContent = uur(r.t);
-    li.append(r.tekst);
-    return li;
-  }));
+function toonKoppeling() {
+  const k = koppeling();
+  const vak = $("#koppeling");
+  if (k) {
+    vak.innerHTML = `<p class="zacht"></p><div class="rij"><button class="gevaar" type="button">Ontkoppelen</button></div>`;
+    vak.querySelector("p").textContent =
+      `Gekoppeld met pc …${k.pc.slice(-6)}, sinds ${tijd(Number(localStorage.getItem("veld.gekoppeld")))}.`;
+    vak.querySelector("button").onclick = () => {
+      localStorage.removeItem("veld.koppeling");
+      log("Ontkoppeld");
+      toonKoppeling();
+    };
+  } else {
+    vak.innerHTML = `<p class="zacht">Nog niet gekoppeld. Open op de pc de pc-pagina en scan de QR-code die daar
+      staat.</p><button type="button" id="scan">QR-code scannen</button>
+      <label for="code">Of plak de koppelcode</label><div class="rij"><input id="code" autocomplete="off">
+      <button type="button" class="tweede" id="plak">Koppelen</button></div>`;
+    $("#scan").onclick = scan;
+    $("#plak").onclick = () => koppel($("#code").value, "koppelcode");
+  }
+  toonStand();
 }
 
-// --- de wachtrij op de telefoon (IndexedDB, want daar passen foto's in) ---------
+// De QR-code scannen in de pagina zelf. Nodig voor de beginschermapp op een
+// iPhone: die heeft eigen opslag, en een link uit de camera opent Safari.
+// Zoals de veld-app van DomotiOffice het doet, met jsQR.
+async function scan() {
+  const laag = document.createElement("div");
+  laag.className = "scan";
+  laag.innerHTML = `<p>Richt de camera op de QR-code op de pc</p><video playsinline muted></video>
+    <button type="button" class="tweede">Stoppen</button>`;
+  document.body.append(laag);
+  let stroom = null;
+  const stop = () => { stroom?.getTracks().forEach((t) => t.stop()); laag.remove(); };
+  laag.querySelector("button").onclick = stop;
+  try {
+    if (!window.jsQR) {
+      await new Promise((ok, nee) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+        s.integrity = "sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx";
+        s.crossOrigin = "anonymous";
+        s.onload = ok;
+        s.onerror = () => nee(new Error("de scanner laadde niet (internet?)"));
+        document.head.append(s);
+      });
+    }
+    stroom = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    const video = laag.querySelector("video");
+    video.srcObject = stroom;
+    await video.play();
+    const doek = document.createElement("canvas");
+    const ctx = doek.getContext("2d", { willReadFrequently: true });
+    const kijk = () => {
+      if (!laag.isConnected) return;
+      if (video.videoWidth) {
+        const schaal = Math.min(1, 720 / video.videoWidth);
+        doek.width = Math.round(video.videoWidth * schaal);
+        doek.height = Math.round(video.videoHeight * schaal);
+        ctx.drawImage(video, 0, 0, doek.width, doek.height);
+        const beeld = ctx.getImageData(0, 0, doek.width, doek.height);
+        const gevonden = jsQR(beeld.data, beeld.width, beeld.height, { inversionAttempts: "dontInvert" });
+        const code = gevonden && new URLSearchParams(gevonden.data.split("#")[1] || "").get("koppel");
+        if (code && leesKoppelcode(code)) {
+          stop();
+          koppel(code, "QR-code in de app");
+          return;
+        }
+      }
+      requestAnimationFrame(kijk);
+    };
+    kijk();
+  } catch (e) {
+    stop();
+    log(`Scannen lukte niet: ${e.message}. Plak dan de koppelcode.`, true);
+  }
+}
+
+// --- de rapporten op de telefoon (IndexedDB, want daar passen foto's in) -------
 
 function db() {
   return new Promise((ok, nee) => {
-    const r = indexedDB.open("proef", 1);
+    const r = indexedDB.open("veld", 1);
     r.onupgradeneeded = () => r.result.createObjectStore("rapporten", { keyPath: "id" });
     r.onsuccess = () => ok(r.result);
     r.onerror = () => nee(r.error);
@@ -169,13 +192,13 @@ async function toonWachtrij() {
     li.textContent = `${r.klant}${r.foto ? " (met foto)" : ""}`;
     const s = document.createElement("span");
     s.className = `stand ${r.stand}`;
-    s.textContent = r.stand === "klaar" ? "wacht op versturen" : `verstuurd ${uur(r.verstuurd)}`;
+    s.textContent = r.stand === "klaar" ? "wacht op versturen" : `verstuurd ${tijd(r.verstuurd)}`;
     li.append(s);
     return li;
   }) : [Object.assign(document.createElement("li"), { className: "zacht", textContent: "Nog niets." })]));
   const wacht = lijst.filter((r) => r.stand === "klaar").length;
-  $("#verstuur").disabled = !wacht;
-  $("#verstuur").textContent = wacht ? `Nu versturen (${wacht})` : "Nu versturen";
+  $("#verstuur").textContent = wacht ? `Nu versturen (${wacht})` : "Verbinden met de pc";
+  if ("setAppBadge" in navigator) navigator.setAppBadge(wacht).catch(() => {});
 }
 
 // Een foto van een telefoon is al snel 3 tot 5 MB. Kleiner maken scheelt op
@@ -194,177 +217,115 @@ async function verklein(bestand) {
   }
 }
 
-// --- inloggen bij Microsoft ----------------------------------------------------
+// --- de verbinding met de pc -------------------------------------------------------
 
-let app = null;
-let account = null;
-let opnieuw = false;      // Microsoft wil dat je opnieuw inlogt
-
-async function startInloggen() {
-  if (!window.msal) {
-    log("De inlogbibliotheek laadde niet. Eén keer met internet openen.", true);
-  } else if (CLIENT_ID.startsWith("VUL")) {
-    log("Nog geen client ID ingevuld.", true);
-  } else {
-    app = new msal.PublicClientApplication({
-      auth: {
-        clientId: CLIENT_ID,
-        authority: "https://login.microsoftonline.com/common",
-        redirectUri: location.origin + location.pathname,
-        navigateToLoginRequestUrl: false,
-      },
-      cache: { cacheLocation: "localStorage" },
+async function verbind() {
+  const k = koppeling();
+  const sleutel = await maakSleutel(k.sleutel);
+  const peer = new Peer({ debug: 0 });
+  try {
+    await new Promise((ok, nee) => {
+      peer.once("open", ok);
+      peer.once("error", nee);
+      setTimeout(() => nee(new Error("Het makelaartje antwoordt niet.")), 15000);
     });
-    await app.initialize();
-    try {
-      const r = await app.handleRedirectPromise();
-      if (r) {
-        account = r.account;
-        opnieuw = false;
-        localStorage.setItem("proef.ingelogd", String(Date.now()));
-        log(`Ingelogd als ${r.account.username}`);
-      }
-    } catch (e) {
-      log(`Inloggen lukte niet: ${e.errorCode || e.message}`, true);
-    }
-    account = account || app.getAllAccounts()[0] || null;
-    if (account) app.setActiveAccount(account);
-  }
-  toonAccount();
-}
-
-function sindsInloggen() {
-  const t = Number(localStorage.getItem("proef.ingelogd") || 0);
-  return t ? `${((Date.now() - t) / 36e5).toFixed(1)} uur` : "onbekend";
-}
-
-function toonAccount() {
-  const knoppen = [];
-  if (!app) {
-    $("#account").textContent = "Inloggen kan nog niet.";
-  } else if (!account) {
-    $("#account").textContent = "Niet ingelogd.";
-    knoppen.push(knop("Inloggen", () => app.loginRedirect({ scopes: SCOPES })));
-    knoppen.push(knop("Inloggen in een venster", inloggenVenster, "tweede"));
-  } else {
-    $("#account").textContent = `${account.username}. Laatst echt ingelogd: ${sindsInloggen()} geleden.`;
-    if (opnieuw) {
-      knoppen.push(knop("Opnieuw inloggen om te versturen",
-        () => app.acquireTokenRedirect({ scopes: SCOPES, account }), "let-op"));
-      knoppen.push(knop("In een venster", inloggenVenster, "tweede"));
-    }
-    knoppen.push(knop("Uitloggen", async () => {
-      await app.logoutRedirect({ account, postLogoutRedirectUri: location.origin + location.pathname });
-    }, "tweede"));
-  }
-  $("#inlogknoppen").replaceChildren(...knoppen);
-}
-
-function knop(tekst, doe, soort = "") {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.textContent = tekst;
-  if (soort) b.className = soort;
-  b.onclick = doe;
-  return b;
-}
-
-// Op een iPhone-beginschermapp kan het doorsturen naar Microsoft en terug
-// anders lopen dan in Safari; daarom ook een venster, om te vergelijken.
-async function inloggenVenster() {
-  try {
-    const r = await app.acquireTokenPopup({ scopes: SCOPES, account: account || undefined });
-    account = r.account;
-    app.setActiveAccount(account);
-    opnieuw = false;
-    localStorage.setItem("proef.ingelogd", String(Date.now()));
-    log(`Ingelogd (venster) als ${account.username}`);
-    toonAccount();
-    verstuur();
+    const conn = peer.connect(k.pc, { reliable: true });
+    await new Promise((ok, nee) => {
+      conn.once("open", ok);
+      peer.on("error", (e) => nee(e.type === "peer-unavailable"
+        ? new Error("De pc is niet bereikbaar. Staat hij aan, met het programma open?") : e));
+      setTimeout(() => nee(new Error("Geen verbinding met de pc binnen 20 seconden.")), 20000);
+    });
+    // De klantenlijst komt mee bij elke verbinding.
+    conn.on("data", async (m) => {
+      if (m.soort !== "klanten") return;
+      localStorage.setItem("veld.klanten", JSON.stringify(tekst.van(await ontsleutel(sleutel, m))));
+      toonKlanten();
+    });
+    const welkom = wachtOp(conn, (m) => m.soort === "welkom", 10000,
+      "De pc nam de telefoon niet aan. Is er op de pc een nieuwe koppeling gemaakt? Koppel dan opnieuw.");
+    conn.send({ soort: "hallo", ...(await versleutel(sleutel, tekst.naar({ toestel: navigator.userAgent }))) });
+    await welkom;
+    return { peer, conn, sleutel };
   } catch (e) {
-    log(`Inloggen in een venster lukte niet: ${e.errorCode || e.message}`, true);
-  }
-}
-
-async function toegang() {
-  if (!app || !account) throw new Error("Niet ingelogd.");
-  try {
-    const r = await app.acquireTokenSilent({ scopes: SCOPES, account });
-    if (!r.fromCache) log(`Toegang stil vernieuwd (${sindsInloggen()} na inloggen)`);
-    return r.accessToken;
-  } catch (e) {
-    if (e instanceof msal.InteractionRequiredAuthError || e.errorCode === "no_tokens_found") {
-      if (!opnieuw) log(`Microsoft vraagt opnieuw in te loggen (${sindsInloggen()} na de vorige keer)`, true);
-      opnieuw = true;
-      toonAccount();
-      throw new Error("opnieuw inloggen");
-    }
+    peer.destroy();
     throw e;
   }
 }
 
-async function onedrive(pad, opties = {}) {
-  const t = await toegang();
-  const r = await fetch(MAP + pad, { ...opties, headers: { Authorization: `Bearer ${t}`, ...(opties.headers || {}) } });
-  if (!r.ok) throw new Error(`OneDrive gaf ${r.status}: ${(await r.text()).slice(0, 160)}`);
-  return r;
-}
-
-// --- versturen en ophalen --------------------------------------------------------
-
 let bezig = false;
+let vorigeFout = "";
 
-async function verstuur() {
-  if (bezig || !navigator.onLine || !account) return;
+async function verstuur(zelf = false) {
+  if (bezig || !koppeling()) return;
+  const wacht = (await alle()).filter((r) => r.stand === "klaar");
+  if (!wacht.length && !zelf) return;
+  if (!navigator.onLine) {
+    if (zelf) log("Geen internet. Het blijft op de telefoon en gaat vanzelf zodra er internet is.");
+    return;
+  }
   bezig = true;
+  toonStand("verbinden…");
+  let v = null;
   try {
-    for (const r of (await alle()).filter((x) => x.stand === "klaar")) {
-      // Eerst de foto en dan het rapport: de pc ziet het rapport pas als de
-      // foto er al staat.
+    v = await verbind();
+    for (const r of wacht) {
+      const inhoud = { id: r.id, klant: r.klant, opmerking: r.opmerking, gemaakt: r.gemaakt,
+        verstuurd: Date.now(), foto: !!r.foto };
+      const bericht = { soort: "rapport", ...(await versleutel(v.sleutel, tekst.naar(inhoud))) };
       if (r.foto) {
-        await onedrive(`:/inbox/${r.id}.jpg:/content`, {
-          method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: r.foto,
-        });
+        const f = await versleutel(v.sleutel, await r.foto.arrayBuffer());
+        bericht.fotoIv = f.iv;
+        bericht.foto = f.data;
       }
-      const inhoud = { id: r.id, klant: r.klant, opmerking: r.opmerking, gemaakt: new Date(r.gemaakt).toISOString(),
-        foto: r.foto ? `${r.id}.jpg` : null, verstuurd: new Date().toISOString(), toestel: navigator.userAgent };
-      await onedrive(`:/inbox/${r.id}.json:/content`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(inhoud, null, 1),
-      });
+      // Pas als de pc zegt dat hij het bewaard heeft, staat het als verstuurd.
+      const bevestigd = wachtOp(v.conn, (m) => m.soort === "ontvangen" && m.id === r.id, 60000,
+        "De pc bevestigde niet binnen een minuut. Het blijft op de telefoon.");
+      v.conn.send(bericht);
+      await bevestigd;
       r.stand = "verstuurd";
       r.verstuurd = Date.now();
       await bewaar(r);
-      log(`Verstuurd: ${r.klant}`);
+      log(`Verstuurd: ${r.klant}${r.foto ? " met foto" : ""}`);
     }
+    if (!wacht.length) log("Verbonden met de pc; klanten bijgewerkt.");
+    vorigeFout = "";
   } catch (e) {
-    if (e.message !== "opnieuw inloggen") log(`Versturen lukte niet: ${e.message}`, true);
+    // Elke halve minuut opnieuw proberen, maar niet elke keer dezelfde regel.
+    const melding = e.message || String(e);
+    if (melding !== vorigeFout || zelf) log(melding, true);
+    vorigeFout = melding;
   } finally {
+    if (v) {
+      v.conn.close();
+      v.peer.destroy();
+    }
     bezig = false;
+    toonStand();
     toonWachtrij();
   }
 }
 
-async function haalKlanten() {
-  try {
-    // Het bestand zelf via de downloadlink: een gewone /content geeft een
-    // doorverwijzing die een browser niet mag volgen (CORS).
-    const info = await (await onedrive(":/klanten.json")).json();
-    const lijst = await (await fetch(info["@microsoft.graph.downloadUrl"])).json();
-    localStorage.setItem("proef.klanten", JSON.stringify({ t: Date.now(), lijst }));
-    log(`${lijst.length} klanten opgehaald`);
-  } catch (e) {
-    if (e.message.includes("404")) log("Er staat nog geen klantenlijst. Draai op de pc: python pc.py klanten", true);
-    else if (e.message !== "opnieuw inloggen") log(`Klanten ophalen lukte niet: ${e.message}`, true);
-  }
-  toonKlanten();
+function toonKlanten() {
+  const lijst = JSON.parse(localStorage.getItem("veld.klanten") || "[]");
+  $("#klantenlijst").replaceChildren(...lijst.map((naam) => Object.assign(document.createElement("option"), { value: naam })));
 }
 
-function toonKlanten() {
-  const k = JSON.parse(localStorage.getItem("proef.klanten") || "null");
-  $("#klanten-stand").textContent = k ? `${k.lijst.length} klanten, opgehaald ${uur(k.t)}. Ze staan bij Klant.`
-    : "Nog geen klanten opgehaald.";
-  $("#klantenlijst").replaceChildren(...(k ? k.lijst : []).map((x) => Object.assign(document.createElement("option"),
-    { value: x.naam })));
+function toonStand(bezigMet = "") {
+  const s = $("#stand");
+  s.className = "pil";
+  if (bezigMet) {
+    s.textContent = bezigMet;
+  } else if (!navigator.onLine) {
+    s.textContent = "geen internet";
+    s.classList.add("let-op");
+  } else if (!koppeling()) {
+    s.textContent = "niet gekoppeld";
+    s.classList.add("let-op");
+  } else {
+    s.textContent = vorigeFout ? "pc niet bereikt" : "gekoppeld";
+    s.classList.add(vorigeFout ? "let-op" : "goed");
+  }
 }
 
 // --- de knoppen ----------------------------------------------------------------
@@ -372,37 +333,40 @@ function toonKlanten() {
 $("#rapport").onsubmit = async (e) => {
   e.preventDefault();
   const bestand = $("#foto").files[0];
+  const klant = $("#klant").value.trim();
   await bewaar({
-    id: crypto.randomUUID(), klant: $("#klant").value.trim(), opmerking: $("#opmerking").value.trim(),
+    id: crypto.randomUUID(), klant, opmerking: $("#opmerking").value.trim(),
     foto: bestand ? await verklein(bestand) : null, gemaakt: Date.now(), stand: "klaar",
   });
-  log(`Afgerond: ${$("#klant").value.trim()}${navigator.onLine ? "" : " (zonder internet)"}`);
+  log(`Afgerond: ${klant}${navigator.onLine ? "" : " (zonder internet)"}`);
   e.target.reset();
   await toonWachtrij();
   verstuur();
 };
-$("#verstuur").onclick = verstuur;
+$("#verstuur").onclick = () => verstuur(true);
 $("#opruimen").onclick = async () => {
   for (const r of await alle()) if (r.stand === "verstuurd") await weg(r.id);
   toonWachtrij();
 };
-$("#klanten").onclick = haalKlanten;
 
-function toonNet() {
-  $("#net").textContent = navigator.onLine ? "internet" : "geen internet";
-  $("#net").classList.toggle("aan", navigator.onLine);
-}
-addEventListener("online", () => { toonNet(); verstuur(); });
-addEventListener("offline", toonNet);
-setInterval(verstuur, 60_000);
+addEventListener("online", () => { toonStand(); verstuur(); });
+addEventListener("offline", () => toonStand());
+document.addEventListener("visibilitychange", () => { if (!document.hidden) verstuur(); });
+setInterval(verstuur, 30_000);
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-toonNet();
-toonLog();
+toonKoppeling();
 toonKlanten();
 toonWachtrij();
-startInloggen().then(verstuur);
+
+const uitHekje = new URLSearchParams(location.hash.slice(1)).get("koppel");
+if (uitHekje) {
+  history.replaceState(null, "", location.pathname);
+  koppel(uitHekje, "QR-code met de camera");
+} else {
+  verstuur();
+}
 </script>
 </body>
 </html>

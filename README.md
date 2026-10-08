@@ -1,17 +1,21 @@
-# OneDrive-proef
+# Veld-proef
 
 Een proef voor een boekhoudprogramma op Windows met een veld-app op de
-telefoon, zonder eigen server: de telefoon zet een afgerond rapport in de
-OneDrive van de gebruiker, en het programma op de pc haalt het daar op.
+telefoon: een rapport offline invullen op de telefoon, en het **rechtstreeks**
+naar de pc sturen, zonder account, zonder eigen server die gegevens bewaart,
+en zonder certificaat op de telefoon.
 
-- `index.html`: de telefoonkant. Offline invullen en afronden, versturen
-  zodra er internet is. Logt in bij Microsoft (MSAL.js) en schrijft alleen in
-  de eigen map van de app in OneDrive (`Files.ReadWrite.AppFolder`).
-- `pc.py`: de pc-kant. `inloggen`, `ophalen`, `klanten`, `status`.
+- `index.html`: de telefoon. Koppelen met een QR-code, offline invullen en
+  afronden, versturen zodra er internet is en de pc aan staat.
+- `pc.html`: speelt het programma op de pc na (Chrome of Edge). Toont de
+  QR-code, ontvangt rapporten, geeft de klantenlijst mee.
+- `gedeeld.js`: koppelcode en versleuteling, voor allebei.
 
-Wat de proef moet laten zien: of het inloggen op de telefoon na een dag nog
-staat (Microsoft geeft een web-app 24 uur), en hoe dat voelt in Safari en als
-beginschermapp op een iPhone. Het logboek onderin de pagina houdt dat bij.
+Telefoon en pc praten via WebRTC met elkaar, zoals videobellen in de browser.
+Een makelaartje (de gratis server van PeerJS) brengt ze in contact; lukt een
+directe verbinding niet, dan gaat het via een doorgeefserver van PeerJS.
+Alles is bovendien versleuteld met een sleutel uit de QR-code (AES-GCM), dus
+geen van die servers kan iets lezen.
 
-Het client ID in beide bestanden is geen geheim; er staan hier geen tokens of
-gegevens in.
+Er staan hier geen geheimen of gegevens in: de sleutel maakt de pc-pagina
+zelf, in de browser, en hij staat alleen in de QR-code.
