@@ -15,6 +15,8 @@
         crossorigin="anonymous"></script>
 <script src="gedeeld.js"></script>
 <style>
+  .keuzes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .keuzes button { margin: 0; padding: 7px 11px; font-size: 14px; font-weight: 500; background: var(--rand); color: var(--inkt); }
   .scan { position: fixed; inset: 0; background: #000; display: grid; place-items: center; z-index: 9; }
   .scan video { width: 100%; max-height: 80vh; object-fit: cover; }
   .scan button { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 16px; right: 16px; }
@@ -36,6 +38,7 @@
       <label for="klant">Klant</label>
       <input id="klant" list="klantenlijst" required autocomplete="off" placeholder="Naam van de klant">
       <datalist id="klantenlijst"></datalist>
+      <div id="klantknoppen" class="keuzes"></div>
       <label for="opmerking">Opmerking</label>
       <textarea id="opmerking" placeholder="Wat je ter plekke zag"></textarea>
       <label for="foto">Foto (mag leeg)</label>
@@ -236,16 +239,23 @@ async function verbind() {
         ? new Error("De pc is niet bereikbaar. Staat hij aan, met het programma open?") : e));
       setTimeout(() => nee(new Error("Geen verbinding met de pc binnen 20 seconden.")), 20000);
     });
-    // De klantenlijst komt mee bij elke verbinding.
-    conn.on("data", async (m) => {
-      if (m.soort !== "klanten") return;
-      localStorage.setItem("veld.klanten", JSON.stringify(tekst.van(await ontsleutel(sleutel, m))));
-      toonKlanten();
-    });
+    // De klantenlijst komt mee bij elke verbinding, vóór het welkom. Eerst
+    // die verwerken en dan pas verder, zodat hij er zeker staat als de
+    // verbinding daarna meteen weer dichtgaat.
+    const klanten = wachtOp(conn, (m) => m.soort === "klanten", 10000, "De pc stuurde geen klanten.");
     const welkom = wachtOp(conn, (m) => m.soort === "welkom", 10000,
       "De pc nam de telefoon niet aan. Is er op de pc een nieuwe koppeling gemaakt? Koppel dan opnieuw.");
     conn.send({ soort: "hallo", ...(await versleutel(sleutel, tekst.naar({ toestel: navigator.userAgent }))) });
     await welkom;
+    try {
+      const lijst = tekst.van(await ontsleutel(sleutel, await klanten));
+      const oud = localStorage.getItem("veld.klanten");
+      localStorage.setItem("veld.klanten", JSON.stringify(lijst));
+      if (oud !== JSON.stringify(lijst)) log(`${lijst.length} klanten van de pc ontvangen`);
+      toonKlanten();
+    } catch (e) {
+      log(`De klantenlijst kwam niet goed over: ${e.message || e}`, true);
+    }
     return { peer, conn, sleutel };
   } catch (e) {
     peer.destroy();
@@ -306,9 +316,19 @@ async function verstuur(zelf = false) {
   }
 }
 
+// De klanten van de pc als knoppen onder het veld. Het keuzelijstje van het
+// veld zelf toont een iPhone pas na een tik, als suggestie boven het
+// toetsenbord, en dan zie je niet dat ze er zijn.
 function toonKlanten() {
   const lijst = JSON.parse(localStorage.getItem("veld.klanten") || "[]");
   $("#klantenlijst").replaceChildren(...lijst.map((naam) => Object.assign(document.createElement("option"), { value: naam })));
+  $("#klantknoppen").replaceChildren(...lijst.map((naam) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = naam;
+    b.onclick = () => { $("#klant").value = naam; };
+    return b;
+  }));
 }
 
 function toonStand(bezigMet = "") {
