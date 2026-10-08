@@ -36,6 +36,16 @@ async function versleutel(sleutel, bytes) {
   return { iv: b64.naar(iv), data: await crypto.subtle.encrypt({ name: "AES-GCM", iv }, sleutel, bytes) };
 }
 
+// Alleen STUN: daarmee vinden telefoon en pc elkaar als hun netwerken dat
+// toelaten. De doorgeefservers (TURN) die PeerJS zelf meegeeft bestaan niet
+// meer (08-10-2026: geen adres), en wachten daarop maakte het alleen trager.
+// Achter 4G lukt een directe verbinding vaak niet; daarvoor is een eigen
+// doorgeefserver nodig.
+const VERBINDING = { config: { iceServers: [
+  { urls: "stun:stun.cloudflare.com:3478" },
+  { urls: "stun:stun.l.google.com:19302" },
+] }, debug: 0 };
+
 const ontsleutel = (sleutel, { iv, data }) => crypto.subtle.decrypt({ name: "AES-GCM", iv: b64.van(iv) }, sleutel, data);
 
 // Wacht op een bericht dat aan past voldoet, hooguit ms milliseconden.

@@ -225,7 +225,7 @@ async function verklein(bestand) {
 async function verbind() {
   const k = koppeling();
   const sleutel = await maakSleutel(k.sleutel);
-  const peer = new Peer({ debug: 0 });
+  const peer = new Peer(VERBINDING);
   try {
     await new Promise((ok, nee) => {
       peer.once("open", ok);
@@ -237,7 +237,8 @@ async function verbind() {
       conn.once("open", ok);
       peer.on("error", (e) => nee(e.type === "peer-unavailable"
         ? new Error("De pc is niet bereikbaar. Staat hij aan, met het programma open?") : e));
-      setTimeout(() => nee(new Error("Geen verbinding met de pc binnen 20 seconden.")), 20000);
+      setTimeout(() => nee(new Error("Geen directe verbinding met de pc via dit netwerk (vaak op 4G). "
+        + "Het gaat vanzelf zodra je op dezelfde wifi zit als de pc.")), 20000);
     });
     // De klantenlijst komt mee bij elke verbinding, vóór het welkom. Eerst
     // die verwerken en dan pas verder, zodat hij er zeker staat als de

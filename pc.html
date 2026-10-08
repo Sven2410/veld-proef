@@ -148,7 +148,7 @@ function stand(tekst_, soort = "") {
 }
 
 function start() {
-  const peer = new Peer(koppel.pc, { debug: 0 });
+  const peer = new Peer(koppel.pc, VERBINDING);
   peer.on("open", () => stand("klaar voor de telefoon", "goed"));
   peer.on("disconnected", () => {
     stand("verbinding met het makelaartje weg, opnieuw…", "let-op");

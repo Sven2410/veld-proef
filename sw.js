@@ -1,6 +1,6 @@
 // Bewaart de telefoonpagina zelf, zodat hij ook zonder internet opent. Alleen
 // de pagina en zijn bestanden; de verbinding met de pc gaat er nooit langs.
-const CACHE = "veld-proef-2";
+const CACHE = "veld-proef-3";
 const PEERJS = "https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js";
 const BESTANDEN = ["./", "stijl.css", "gedeeld.js", "manifest.webmanifest", "icoon.png", PEERJS];
 
